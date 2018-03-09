@@ -27,7 +27,7 @@ int bed_access_get_bed_range_from_file_by_index(char *file_loc, int index, char 
     break;
 	}
 	if(found==0){
-	  sentinel("Index %d not found in bed file %s. Is your index too high?\n",index,file_loc);
+	  sentinel("Index %d not found in bed file %s. Is your index too high?\n",index,file_loc,1);
 	}
 	int chk = fclose(bedf);
   check(chk==0,"Error closing bed file '%s'.",file_loc);
