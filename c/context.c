@@ -61,7 +61,7 @@ void print_version (int exit_code){
 
 void print_usage (int exit_code){
 
-	printf ("Usage: triplets -i index -o file.out -f reference.fa -s sections.bed [-h] [-v]\n\n");
+	printf ("Usage: context_counter -i index -o file.out -f reference.fa -s sections.bed [-h] [-v]\n\n");
 	printf ("-i --index          Index of line in sections.bed to use.\n");
 	printf ("-o --output         Output file.\n");
   printf ("-f --fasta          Reference fasta file e.g. genome.fa\n");
