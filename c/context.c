@@ -1,5 +1,5 @@
 /**   LICENSE
-* Copyright (c) 2018 Genome Research Ltd.
+* Copyright (c) 2020 Genome Research Ltd.
 *
 * Author:  cgphelp@sanger.ac.uk
 *
