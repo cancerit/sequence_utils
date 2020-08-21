@@ -2,6 +2,12 @@
 
 A collection of sequence related scripts.
 
+| Item | Status |
+|--|--|
+| Travis-ci - Master | [![Build Status](https://travis-ci.com/cancerit/sequence_utils.svg?branch=master)](https://travis-ci.com/cancerit/sequence_utils) |
+| Travis-ci - Develop | [![Build Status](https://travis-ci.com/cancerit/sequence_utils.svg?branch=develop)](https://travis-ci.com/cancerit/sequence_utils) |
+| Docker image | [![Docker Repository on Quay](https://quay.io/repository/wtsicgp/sequence_utils/status "Docker Repository on Quay")](https://quay.io/repository/wtsicgp/sequence_utils) |
+
 ## Scripts
 
 ### context_counter
@@ -23,3 +29,12 @@ Other:
 -h --help           Display this usage information.
 -v --version        Prints the version number.
 ```
+
+## Cutting a release
+
+Ensure the version is updated in the following files:
+
+* `Dockerfile`
+* `VERSION.txt`
+
+Docker image will automatically be build on quay.io when tagged.
