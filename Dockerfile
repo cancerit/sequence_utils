@@ -26,7 +26,7 @@ FROM  ubuntu:20.04
 
 LABEL maintainer="cgphelp@sanger.ac.uk"\
       uk.ac.sanger.cgp="Cancer, Ageing and Somatic Mutation, Wellcome Sanger Institute" \
-      version="1.0.0" \
+      version="1.0.1" \
       description="sequence_utils"
 
 ENV OPT /opt/wtsi-cgp
