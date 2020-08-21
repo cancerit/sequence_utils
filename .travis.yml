@@ -11,4 +11,4 @@ script:
  - docker build -t sequence_utils .
  - docker images | grep -c sequence_utils
  - echo 'Verify program(s) from this repo'
- - docker run -t --rm context_counter --version
+ - docker run -t --rm sequence_utils context_counter --version
