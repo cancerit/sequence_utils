@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #htslib
-SOURCE_HTSLIB="https://github.com/samtools/htslib/releases/download/1.7/htslib-1.7.tar.bz2"
+SOURCE_HTSLIB="https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2"
 
 get_distro () {
   EXT=""
