@@ -41,7 +41,7 @@ int bed_access_get_bed_range_from_file_by_index(char *file_loc, int index, char 
   char rd[4096];
   int found = 0;
 	while(fgets(rd, 4096, bedf) != NULL){
-		check(rd != NULL,"Invalid line read in ignored region file.");
+		check(rd != NULL,"Invalid line read in region file.");
 		line_no++;
 		if (line_no != index) continue;
 		char *chr_nom = malloc(sizeof(char *));
@@ -67,4 +67,20 @@ int bed_access_get_bed_range_from_file_by_index(char *file_loc, int index, char 
 error:
 	if(bedf) fclose(bedf);
 	return 0;
+}
+
+int bed_access_get_lines_in_file(char *file_loc){
+  FILE *bedf = NULL;
+  int count_lines = 0;
+  bedf = fopen(file_loc,"r");
+  char filechar[40], chr;
+  chr = getc(bedf);
+  while (chr != EOF){
+    if (chr == '\n') {
+      count_lines = count_lines + 1;
+    }
+    chr = getc(bedf);
+  }
+  fclose(bedf); //close file.
+  return count_lines;
 }
