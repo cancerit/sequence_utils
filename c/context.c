@@ -62,12 +62,14 @@ void print_version (int exit_code){
 void print_usage (int exit_code){
 
 	printf ("Usage: context_counter -i index -o file.out -f reference.fa -s sections.bed [-h] [-v]\n\n");
-	printf ("-i --index          Index of line in sections.bed to use.\n");
+  printf ("Required:\n");
 	printf ("-o --output         Output file.\n");
   printf ("-f --fasta          Reference fasta file e.g. genome.fa\n");
 	printf ("-c --context-len    Length of contexts to count. Default [%d]\n",context_size);
   printf ("-s --sections       Sections bed file. Index is used to select the line in this file as the region to process.\n\n");
-  printf ("Other:\n");
+  printf ("\nOptional:\n");
+  printf ("-i --index          Index of line in sections.bed to use, process all when absent.\n");
+  printf ("\nOther:\n");
   printf ("-h --help           Display this usage information.\n");
 	printf ("-v --version        Prints the version number.\n\n");
   exit(exit_code);
@@ -97,8 +99,8 @@ void options(int argc, char *argv[]){
    while((iarg = getopt_long(argc, argv, "i:o:f:s:c:vh", long_opts, &index)) != -1){
    	switch(iarg){
    		case 'i':
-        if(sscanf(optarg, "%i", &idx) != 1 || idx < 1){
-      		fprintf(stderr,"Error parsing -i argument '%s'. Should be an integer > 0",optarg);
+        if(sscanf(optarg, "%i", &idx) != 1 || idx < 0){
+      		fprintf(stderr,"Error parsing -i argument '%s'. Should be an integer >= 0",optarg);
       		print_usage(1);
       	}
         break;
@@ -159,7 +161,9 @@ void options(int argc, char *argv[]){
       print_usage(1);
     }
 
-    if(idx<1){
+    if(idx == 0){
+      fprintf(stderr,"No index (or idx==0) defined, all loci in sections.bed will be processed\n");
+    }else if(idx<1){
       fprintf(stderr,"Invalid index %i to lookup section in sections.bed\n",idx);
       print_usage(1);
     }
@@ -180,47 +184,60 @@ int main(int argc, char *argv[]){
 	int start = 0;
 	int stop = 0;
 	FILE *output = NULL;
-	khash_t(cod) *cod_hash = NULL;
-	//Use index and sections bed to get the bed file section we want
-	int res = bed_access_get_bed_range_from_file_by_index(sections_bed, idx, &chr, &start, &stop);
-	check(res==1,"Error retrieving line from bed file.");
-  //Retrieve reference sequence for the region
+  // init the codon hash
+  khash_t(cod) *cod_hash = NULL;
+  cod_hash = kh_init(cod);
+  // load the fai file
   fai = fai_load(ref_file);
   check(fai,"Error loading reference sequence file %s.",ref_file);
-  region = malloc(sizeof(char *) * (strlen(chr)+60));
-  check_mem(region);
-  int out = sprintf(region,"%s:%d-%d",chr,start,stop);
-  check(out>0,"Error writing region string.");
-  int length_of_seq;
-  seq = fai_fetch(fai,region,&length_of_seq);
-  check(seq != NULL,"Error fetching sequence for region %s.",region);
-  //Iterate through and add each codon to the counts
-  cod_hash = kh_init(cod);
-  int i=0;
-  for(i=0;i<length_of_seq-(context_size-1);i++){
-    //Build codon
-    char *codon = malloc(sizeof(char)*(context_size+1));
-    codon[context_size] = '\0';
-    int s=0;
-    int isn = 0;
-    for(s=0;s<context_size;s++){
-      codon[s] = toupper(seq[i+s]);
-      if(codon[s] != 'A' && codon[s] != 'C' &&  codon[s] != 'G' && codon[s] != 'T'){
-        isn = 1;
+
+  int this_idx = idx;
+  int idx_stop = idx;
+  if (idx == 0) {
+    this_idx = 1;
+    idx_stop = bed_access_get_lines_in_file(sections_bed);
+    check(idx_stop>0,"Error parsing bed file.");
+  }
+
+  for(; this_idx <= idx_stop; this_idx++) {
+    //Use index and sections bed to get the bed file section we want
+    int res = bed_access_get_bed_range_from_file_by_index(sections_bed, this_idx, &chr, &start, &stop);
+    check(res==1,"Error retrieving line from bed file.");
+    //Retrieve reference sequence for the region
+    region = malloc(sizeof(char *) * (strlen(chr)+60));
+    check_mem(region);
+    int out = sprintf(region,"%s:%d-%d",chr,start,stop);
+    check(out>0,"Error writing region string.");
+    int length_of_seq;
+    seq = fai_fetch(fai,region,&length_of_seq);
+    check(seq != NULL,"Error fetching sequence for region %s.",region);
+    //Iterate through and add each codon to the counts
+    int i=0;
+    for(i=0;i<length_of_seq-(context_size-1);i++){
+      //Build codon
+      char *codon = malloc(sizeof(char)*(context_size+1));
+      codon[context_size] = '\0';
+      int s=0;
+      int isn = 0;
+      for(s=0;s<context_size;s++){
+        codon[s] = toupper(seq[i+s]);
+        if(codon[s] != 'A' && codon[s] != 'C' &&  codon[s] != 'G' && codon[s] != 'T'){
+          isn = 1;
+        }
       }
-    }
-    if(isn==1){
-      free(codon);
-      continue;
-    }
-    int res;
-    khiter_t k = kh_get(cod, cod_hash, codon);          // query the hash table
-    if(k == kh_end(cod_hash)){
-      k = kh_put(cod,cod_hash,codon,&res);
-      kh_value(cod_hash,k) = 1;
-    }else{
-      kh_value(cod_hash,k) = kh_value(cod_hash,k)+1;
-      free(codon);
+      if(isn==1){
+        free(codon);
+        continue;
+      }
+      int res;
+      khiter_t k = kh_get(cod, cod_hash, codon);          // query the hash table
+      if(k == kh_end(cod_hash)){
+        k = kh_put(cod,cod_hash,codon,&res);
+        kh_value(cod_hash,k) = 1;
+      }else{
+        kh_value(cod_hash,k) = kh_value(cod_hash,k)+1;
+        free(codon);
+      }
     }
   }
 

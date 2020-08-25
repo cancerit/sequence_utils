@@ -41,4 +41,6 @@ KHASH_MAP_INIT_STR(cod,uint64_t)
 
 int bed_access_get_bed_range_from_file_by_index(char *file_loc, int index, char **chr, int *start, int *stop);
 
+int bed_access_get_lines_in_file(char *file_loc);
+
 #endif
